@@ -1,0 +1,55 @@
+version: '2'
+
+volumes:
+  nextcloud-db:
+    external: true
+  nextcloud:
+    external: true
+  nextcloud-seafile:
+    external: true
+  nextcloud-data:
+    external: true
+
+services:
+  db: # optional mysql database, sqlite is also fine for small files
+    image: mariadb
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: on-failure
+    volumes:
+      - nextcloud-db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=<insert root password here>
+      - MYSQL_PASSWORD=<insert user password here>
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+  app:
+    build: ./
+    image: stevefan1999/nextcloud-seafile
+    restart: on-failure
+    devices:
+      - /dev/fuse
+    cap_add: 
+      - SYS_ADMIN
+    ports:
+      - 8888:80
+    depends_on:
+      - db
+      - seafile
+    volumes:
+      - nextcloud:/var/www/html
+      - nextcloud-data:/data
+    environment:
+      - SEAFILE_HOST=http://seafile
+      - SEAFILE_USERNAME=nextcloud@seafile.me
+      - SEAFILE_PASSWORD=<insert seafile admin password here>
+      # - SEAFILE_TOKEN=<or if you retrieved a credential token>
+  seafile: # also optional seafile server
+    image: seafileltd/seafile:latest
+    volumes:
+      - nextcloud-seafile:/shared
+    restart: on-failure
+    expose:
+      - 80/tcp
+    environment:
+      - SEAFILE_ADMIN_EMAIL=nextcloud@seafile.me
+      - SEAFILE_ADMIN_PASSWORD=<insert seafile admin password here>
