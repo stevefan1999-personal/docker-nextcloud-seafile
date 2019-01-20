@@ -61,9 +61,9 @@ else
   echo "[INFO] Previous configuration of $filename found..."
 fi
 
+chown -R www-data:www-data /data
 echo "[INFO] Starting seadrive..."
 seadrive -f -c /data/$filename -o nonempty,allow_other -d /data/seadrive-data /data/seadrive-fuse -l /dev/stdout &
-
 echo "[INFO] Patching nextcloud config to ignore permission check..."
 cd /var/www/html
 echo "[INFO] Starting nextcloud..."
